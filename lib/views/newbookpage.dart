@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:bookbytes_lab_2/views/login.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -300,6 +301,7 @@ class _NewBookPageState extends State<NewBookPage> {
     if (pickedFile != null) {
       _image = File(pickedFile.path);
       cropImage();
+      
     } else {
       print('No image selected.');
     }
@@ -317,6 +319,7 @@ class _NewBookPageState extends State<NewBookPage> {
       _image = File(pickedFile.path);
 
       cropImage();
+      
     } else {
       print('No image selected.');
     }
@@ -414,12 +417,13 @@ class _NewBookPageState extends State<NewBookPage> {
     String author = authCtrl.text;
     String price = priceCtrl.text;
     String qty = qtyCtrl.text;  
-    String base64Image = base64Encode(_image!.readAsBytesSync());
+    String imageBase64 = base64Encode(_image!.readAsBytesSync());
 
     http.post(
         Uri.parse("${MyServerConfig.server}/mypasar/php/insert_book.php"),
         body: {
-          "userid": widget.userdata.id.toString(),
+          
+          "id": widget.userdata.id.toString(),
           "isbn": isbn,
           "title": title,
           "desc": desc,
@@ -427,23 +431,27 @@ class _NewBookPageState extends State<NewBookPage> {
           "price": price,
           "qty": qty,
           "status": dropdownvalue,
-          "image": base64Image,
+          "image": imageBase64,
         }).then((response) {
+
+          print(response.body);
+
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
+        var data = jsonDecode(response.body.toString());
         print(data);
         if (data['status'] == "success") {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Insert Success"),
             backgroundColor: Colors.green,
           ));
-          // Navigator.push(context,
-          //     MaterialPageRoute(builder: (content) => const LoginPage()));
+           Navigator.push(context,
+              MaterialPageRoute(builder: (content) => const LoginPage()));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Insert Failed"),
             backgroundColor: Colors.red,
           ));
+          print("Insert Failed: ${data['data']}");
         }
       }
     else {
@@ -452,6 +460,10 @@ class _NewBookPageState extends State<NewBookPage> {
   }
 }).catchError((error) {
   print("Error during HTTP request: $error");
+}).catchError((error) {
+  // 错误处理
+  print("Error during HTTP request: $error");
 });
+;
   }
 }

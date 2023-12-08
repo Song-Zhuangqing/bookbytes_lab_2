@@ -1,5 +1,5 @@
-import 'package:bookbytes_lab_2/views/splahspage.dart';
 import 'package:flutter/material.dart';
+import 'views/splahspage.dart';
 
 void main() {
   runApp(const MyApp());

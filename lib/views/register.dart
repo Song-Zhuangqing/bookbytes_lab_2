@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:bookbytes_lab_2/main.dart';
 import 'package:bookbytes_lab_2/shared/myserverconfig.dart';
+import 'package:bookbytes_lab_2/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -301,7 +302,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             backgroundColor: Colors.green,
           ));
           Navigator.push(context,
-              MaterialPageRoute(builder: (content) => MyApp()));
+              MaterialPageRoute(builder: (content) => LoginPage()));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Registration Failed"),
