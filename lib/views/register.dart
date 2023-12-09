@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 
 import 'package:bookbytes_lab_2/main.dart';
@@ -27,6 +29,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
         appBar: AppBar(title: const Text("Registration Form")),
         body: SingleChildScrollView(
@@ -78,9 +81,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             labelText: 'Phone',
                             icon: Icon(Icons.person),
                           ),
-                          /*validator: (val) => val!.isEmpty || (val.length < 3)
-                              ? "name must be longer than 3"
-                              : null,*/
+                         
                         ),
                         TextFormField(
                           controller: _passEditingController,
@@ -109,9 +110,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             labelText: 'Address',
                             icon: Icon(Icons.person),
                           ),
-                          /*validator: (val) => val!.isEmpty || (val.length < 3)
-                              ? "name must be longer than 3"
-                              : null,*/
+                          
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -289,10 +288,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
           "password": _pass,
           "address":_address,
         }).then((response) async {
-  print("Response status code: ${response.statusCode}");
-  print("Response body: ${response.body}");
-
-
+        print("Response status code: ${response.statusCode}");
+        print("Response body: ${response.body}");
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
         print(data);
@@ -311,10 +308,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
         }
       }
       
-    });
-    } catch (e) {
-    print("Error in _registerUser(): $e");
-  }
-  }
+      });
+      } catch (e) {
+      print("Error in _registerUser(): $e");
+      }
+    }
   
 }

@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'dart:convert';
 
@@ -129,7 +129,6 @@ class _LoginPageState extends State<LoginPage> {
         Uri.parse("${MyServerConfig.server}/mypasar/php/login_user.php"),
         body: {"email": _email, "password": _pass}).then((response) {
       print(response.statusCode);
-      // print(response.body);
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         if (data['status'] == "success") {
@@ -138,6 +137,7 @@ class _LoginPageState extends State<LoginPage> {
             content: Text("Login Success"),
             backgroundColor: Colors.green,
           ));
+          print("API JSON Data: ${data['data']}");
           Navigator.push(context,
               MaterialPageRoute(builder: (content) =>  MainPage(userdata:user)));
         } else {
@@ -149,16 +149,6 @@ class _LoginPageState extends State<LoginPage> {
       }
     });
   }
-
-  // User user = User(
-  //     userid: data['data']['userid'],
-  //     useremail: data['data']['useremail'],
-  //     username: data['data']['username'],
-  //     userdatereg: data['data']['userdatereg'],
-  //     userpassword: data['data']['userpassword']);
-  // print(user.username);
-  // print(user.useremail);
-  // print(user.userid);
 
   void saveremovepref(bool value) async {
     String email = _emailditingController.text;

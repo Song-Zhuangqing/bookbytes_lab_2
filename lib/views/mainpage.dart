@@ -23,7 +23,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    loadBooks();
+    //loadBooks();
   }
 
   int axiscount = 2;
@@ -64,6 +64,7 @@ class _MainPageState extends State<MainPage> {
               height: 1.0,
             ),
           )),
+          
       drawer: MyDrawer(
         page: "books",
         userdata: widget.userdata,
@@ -86,7 +87,7 @@ class _MainPageState extends State<MainPage> {
                               padding: const EdgeInsets.all(4.0),
                               child: Image.network(
                                   fit: BoxFit.fill,
-                                  "${MyServerConfig.server}/bookbytes/assets/books/${bookList[index].bookId}.png"),
+                                  "${MyServerConfig.server}/bookbytes/assets/products/${bookList[index].bookId}.png"),
                             ),
                           ),
                           Flexible(

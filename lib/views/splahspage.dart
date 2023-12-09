@@ -40,21 +40,30 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Text(
-            "BookBytes",
-            style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          ),
-          CircularProgressIndicator(),
-          Text("Version 0.1")
-        ],
-      )),
-    );
-  }
+  return Scaffold(
+    body: Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/cover.png',), // 替换成您的背景图像路径
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Text(
+              "BookBytes",
+              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+            ),
+            CircularProgressIndicator(),
+            Text("Version 0.1"),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
   checkandlogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

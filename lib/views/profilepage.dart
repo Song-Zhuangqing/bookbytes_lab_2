@@ -74,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Column(
                       children: [
                         Text(
-                          "Ahmad Hanis",
+                          "",
                           style: TextStyle(fontSize: 24),
                         ),
                         Divider(

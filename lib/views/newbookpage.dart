@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:bookbytes_lab_2/views/login.dart';
+import 'package:bookbytes_lab_2/views/mainpage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -440,12 +441,13 @@ class _NewBookPageState extends State<NewBookPage> {
         var data = jsonDecode(response.body.toString());
         print(data);
         if (data['status'] == "success") {
+           User user = User.fromJson(data['data']);
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Insert Success"),
             backgroundColor: Colors.green,
           ));
-           Navigator.push(context,
-              MaterialPageRoute(builder: (content) => const LoginPage()));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (content) =>  MainPage(userdata:user)));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Insert Failed"),
