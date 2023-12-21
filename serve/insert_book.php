@@ -1,7 +1,7 @@
 <?php
 //error_reporting(0);
 
-if (!isset($_POST['userid']) && !isset($_POST['isbn']) && !isset($_POST['title'])) {
+if (!isset($_POST['id']) && !isset($_POST['isbn']) && !isset($_POST['title'])) {
     $response = array('status' => 'failed', 'data' => null);
     sendJsonResponse($response);
     die();
@@ -9,7 +9,7 @@ if (!isset($_POST['userid']) && !isset($_POST['isbn']) && !isset($_POST['title']
 
 include_once("dbconnect.php");
 
-$userid = $_POST['userid'];
+$userid = $_POST['id'];
 $isbn = $_POST['isbn'];
 $title = addslashes($_POST['title']);
 $desc = addslashes($_POST['desc']);
@@ -25,20 +25,20 @@ VALUES ('$userid','$isbn','$title','$desc','$author',$price,$qty,'$status')";
 
 if ($conn->query($sqlinsert) === TRUE) {
     $filename = mysqli_insert_id($conn);
-    $path = '../assets/images/' . $filename . '.png';
+    $path = '../images/products/' . $filename . '.png';
     file_put_contents($path, $decoded_string);
-	$response = array('status' => 'success', 'data' => $sqlinsert);
-    sendJsonResponse($response);
+	$response = array('status' => 'success', 'data' => null);
+    
 }else{
 	$response = array('status' => 'failed', 'data' => $sqlinsert);
-	sendJsonResponse($response);
+	
 }
-
+sendJsonResponse($response);
 
 function sendJsonResponse($sentArray)
 {
     header('Content-Type: application/json');
     echo json_encode($sentArray);
 }
-
+   
 ?>
