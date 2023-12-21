@@ -1,9 +1,15 @@
 //seller page
 
-import 'package:bookbytes_lab_2/shared/mydrawer.dart';
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:developer';
 
+import 'package:bookbytes_lab_2/models/order.dart';
+import 'package:bookbytes_lab_2/shared/mydrawer.dart';
+import 'package:bookbytes_lab_2/views/orderdetails.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../models/user.dart';
+import '../shared/myserverconfig.dart';
 
 class OrderPage extends StatefulWidget {
   final User userdata;
@@ -14,6 +20,15 @@ class OrderPage extends StatefulWidget {
 }
 
 class _OrderPageState extends State<OrderPage> {
+  List<Order> orderList = <Order>[];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadOrders();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,7 +39,7 @@ class _OrderPageState extends State<OrderPage> {
               children: [
                 //CircleAvatar(backgroundImage: AssetImage('')),
                 Text(
-                  "Sells Book",
+                  "Order and Sales",
                   style: TextStyle(
                     color: Colors.black,
                   ),
@@ -47,8 +62,68 @@ class _OrderPageState extends State<OrderPage> {
           page: 'seller',
           userdata: widget.userdata,
         ),
-        body: const Center(
-          child: Text("SELLER PAGE"),
-        ));
+        body: orderList.isEmpty
+            ? const Center(child: Text("No Data"))
+            : Column(
+                children: [
+                  Container(
+                    alignment: Alignment.center,
+                    child: Text("Number of Order/s ${orderList.length}"),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                        itemCount: orderList.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                              title: Text(orderList[index].userName.toString()),
+                              onTap: () async {
+                                Order order =
+                                    Order.fromJson(orderList[index].toJson());
+                                await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (content) => OrderDetailsPage(
+                                              user: widget.userdata,
+                                              order: order,
+                                            )));
+                                loadOrders();
+                              },
+                              subtitle:
+                                  Text("RM ${orderList[index].orderTotal}"),
+                              leading: Icon(Icons.sell),
+                              trailing: Text(orderList[index]
+                                  .orderStatus
+                                  .toString()
+                                  .toUpperCase()));
+                        }),
+                  )
+                ],
+              ));
+  }
+
+  void loadOrders() {
+    String userid = widget.userdata.id.toString();
+    
+    http
+        .get(
+      Uri.parse(
+          "${MyServerConfig.server}/mypasar/php/register_user.php?sellerid=$userid"),
+    )
+        .then((response) {
+      
+      if (response.statusCode == 200) {
+        log(response.body);
+        var data = jsonDecode(response.body);
+        if (data['status'] == "success") {
+          orderList.clear();
+          data['data']['orders'].forEach((v) {
+            orderList.add(Order.fromJson(v));
+          });
+        } else {
+          //if no status failed
+        }
+      }
+      setState(() {});
+    });
   }
 }

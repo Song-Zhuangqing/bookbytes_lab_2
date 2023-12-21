@@ -1,23 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:bookbytes_lab_2/views/mainpage.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import '../models/book.dart';
 import '../models/user.dart';
 import '../shared/myserverconfig.dart';
 
-class NewBookPage extends StatefulWidget {
-  final User userdata;
+class EditBookPage extends StatefulWidget {
+  final Book book;
+  final User user;
 
-  const NewBookPage({super.key, required this.userdata});
+  const EditBookPage({super.key, required this.book, required this.user});
 
   @override
-  State<NewBookPage> createState() => _NewBookPageState();
+  State<EditBookPage> createState() => _EditBookPageState();
 }
 
-class _NewBookPageState extends State<NewBookPage> {
+class _EditBookPageState extends State<EditBookPage> {
   late double screenWidth, screenHeight;
 
   File? _image;
@@ -37,12 +38,25 @@ class _NewBookPageState extends State<NewBookPage> {
   final _formKey = GlobalKey<FormState>();
 
   @override
+  void initState() {
+    super.initState();
+    isbnCtrl.text = widget.book.bookIsbn.toString();
+    titleCtrl.text = widget.book.bookTitle.toString();
+    descCtrl.text = widget.book.bookDesc.toString();
+    authCtrl.text = widget.book.bookAuthor.toString();
+    priceCtrl.text = widget.book.bookPrice.toString();
+    qtyCtrl.text = widget.book.bookQty.toString();
+    dropdownvalue = widget.book.bookStatus.toString();
+  }
+
+  @override
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height;
     screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
-      appBar: AppBar(title: const Text("New Book")),
+      appBar: AppBar(
+        title: const Text("Edit Book"),
+      ),
       body: SingleChildScrollView(
         child: Container(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -58,19 +72,19 @@ class _NewBookPageState extends State<NewBookPage> {
                       },
                       child: Container(
                         height: screenHeight * 0.3,
-                        width: screenWidth * 0.8,
+                        width: screenWidth * 0.9,
                         decoration: BoxDecoration(
                             image: DecorationImage(
-                                fit: BoxFit.scaleDown,
+                                fit: BoxFit.fill,
                                 image: _image == null
-                                    ? const AssetImage(
-                                        "assets/images/profile.png")
+                                    ? NetworkImage(
+                                        "${MyServerConfig.server}/mypasar/images/products/${widget.book.bookId}.png")
                                     : FileImage(_image!) as ImageProvider)),
                       ),
                     ),
                   ),
                   const Text(
-                    "Add New Book",
+                    "Edit Book",
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   TextFormField(
@@ -230,9 +244,9 @@ class _NewBookPageState extends State<NewBookPage> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         fixedSize: Size(screenWidth, 40)),
-                    child: const Text('Add Book'),
+                    child: const Text('Update Book'),
                     onPressed: () {
-                      insertBookDialog();
+                      updateBookDialog();
                     },
                   ),
                 ],
@@ -342,17 +356,10 @@ class _NewBookPageState extends State<NewBookPage> {
     }
   }
 
-  void insertBookDialog() {
+  void updateBookDialog() {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Please fill in form!!!"),
-        backgroundColor: Colors.red,
-      ));
-      return;
-    }
-    if (_image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Please take picture!!!"),
         backgroundColor: Colors.red,
       ));
       return;
@@ -364,7 +371,7 @@ class _NewBookPageState extends State<NewBookPage> {
           shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0))),
           title: const Text(
-            "Insert new book",
+            "Update this book",
             style: TextStyle(),
           ),
           content: const Text("Are you sure?", style: TextStyle()),
@@ -376,7 +383,7 @@ class _NewBookPageState extends State<NewBookPage> {
               ),
               onPressed: () {
                 Navigator.of(context).pop();
-                insertBook();
+                updateBook();
               },
             ),
             TextButton(
@@ -398,20 +405,26 @@ class _NewBookPageState extends State<NewBookPage> {
     );
   }
 
-  void insertBook() {
+  void updateBook() {
     String isbn = isbnCtrl.text;
     String title = titleCtrl.text;
     String desc = descCtrl.text;
     String author = authCtrl.text;
     String price = priceCtrl.text;
     String qty = qtyCtrl.text;
-    String imagestr = base64Encode(_image!.readAsBytesSync());
+    String imagestr;
+
+    if (_image != null) {
+      imagestr = base64Encode(_image!.readAsBytesSync());
+    } else {
+      imagestr = "NA";
+    }
 
     http.post(
-        Uri.parse("${MyServerConfig.server}/mypasar/php/insert_book.php"),
+        Uri.parse("${MyServerConfig.server}/mypasar/php/update_book.php"),
         body: {
-          
-          "id": widget.userdata.id.toString(),
+          "bookid": widget.book.bookId,
+          "userid": widget.user.id.toString(),
           "isbn": isbn,
           "title": title,
           "desc": desc,
@@ -419,40 +432,24 @@ class _NewBookPageState extends State<NewBookPage> {
           "price": price,
           "qty": qty,
           "status": dropdownvalue,
-          "image": imagestr,
+          "image": imagestr
         }).then((response) {
-
-          print(response.body);
-
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body.toString());
-        print(data);
+        var data = jsonDecode(response.body);
         if (data['status'] == "success") {
-           User user = User.fromJson(data['data']);
+          Navigator.of(context).pop();
+          Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Insert Success"),
+            content: Text("Update Success"),
             backgroundColor: Colors.green,
           ));
-          Navigator.push(context,
-              MaterialPageRoute(builder: (content) =>  MainPage(userdata:user)));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Insert Failed"),
+            content: Text("Update Failed"),
             backgroundColor: Colors.red,
           ));
-          print("Insert Failed: ${data['data']}");
         }
       }
-    else {
-    print("HTTP request failed with status: ${response.statusCode}");
-    print("Response body: ${response.body}");
-  }
-}).catchError((error) {
-  print("Error during HTTP request: $error");
-}).catchError((error) {
-  // 错误处理
-  print("Error during HTTP request: $error");
-});
-;
+    });
   }
 }

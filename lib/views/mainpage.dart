@@ -1,17 +1,19 @@
 //Buyer page
 
 import 'dart:convert';
+import 'dart:developer';
 import 'package:bookbytes_lab_2/models/book.dart';
 import 'package:bookbytes_lab_2/models/user.dart';
 import 'package:bookbytes_lab_2/shared/mydrawer.dart';
 import 'package:bookbytes_lab_2/shared/myserverconfig.dart';
+import 'package:bookbytes_lab_2/views/bookdetails.dart';
 import 'package:bookbytes_lab_2/views/newbookpage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class MainPage extends StatefulWidget {
   final User userdata;
-  const MainPage({super.key, required this.userdata});
+  const MainPage({Key? key, required this.userdata}): super(key: key);
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -20,10 +22,17 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   List<Book> bookList = <Book>[];
   late double screenWidth, screenHeight;
+  int numofpage = 1;
+  int curpage = 1;
+  int numofresult = 0;
+
+  var color;
+  String title = "";
+
   @override
   void initState() {
     super.initState();
-    //loadBooks();
+    loadBooks(title);
   }
 
   int axiscount = 2;
@@ -55,6 +64,13 @@ class _MainPageState extends State<MainPage> {
               ),
             ],
           ),
+          actions: [
+            IconButton(
+                onPressed: () {
+                  showSearchDialog();
+                },
+                icon: const Icon(Icons.search))
+          ],
           backgroundColor: Colors.transparent,
           elevation: 0.0,
           bottom: PreferredSize(
@@ -64,58 +80,114 @@ class _MainPageState extends State<MainPage> {
               height: 1.0,
             ),
           )),
-          
       drawer: MyDrawer(
         page: "books",
         userdata: widget.userdata,
       ),
-      body: bookList.isEmpty
-          ? const Center(child: Text("No Data"))
-          : Column(
-              children: [
-                Expanded(
-                  child: GridView.count(
-                    crossAxisCount: axiscount,
-                    children: List.generate(bookList.length, (index) {
-                      return Card(
-                          child: Column(
-                        children: [
-                          Flexible(
-                            flex: 6,
-                            child: Container(
-                              width: screenWidth,
-                              padding: const EdgeInsets.all(4.0),
-                              child: Image.network(
-                                  fit: BoxFit.fill,
-                                  "${MyServerConfig.server}/bookbytes/assets/products/${bookList[index].bookId}.png"),
-                            ),
-                          ),
-                          Flexible(
-                            flex: 4,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  truncateString(
-                                      bookList[index].bookTitle.toString()),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          loadBooks(title);
+        },
+        child: bookList.isEmpty
+            ? const Center(child: Text("No Data"))
+            : Column(
+                children: [
+                  Container(
+                    alignment: Alignment.center,
+                    child: Text("Page $curpage/$numofresult"),
+                  ),
+                  Expanded(
+                    child: GridView.count(
+                      crossAxisCount: axiscount,
+                      children: List.generate(bookList.length, (index) {
+                        return Card(
+                          child: InkWell(
+                            onTap: () async {
+                              Book book =
+                                  Book.fromJson(bookList[index].toJson());
+                              var result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (content) => BookDetails(
+                                    user: widget.userdata,  
+                                    book: book,
+                                  ),
                                 ),
-                                Text("RM ${bookList[index].bookPrice}"),
-                                Text(
-                                    "Available ${bookList[index].bookQty} unit"),
+                              );
+                              if (result != null && result == true) {
+                              loadBooks(title);
+                              }
+                            },
+                            child: Column(
+                              children: [
+                                Flexible(
+                                  flex: 6,
+                                  child: Container(
+                                    width: screenWidth,
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Image.network(
+                                      fit: BoxFit.fill,
+                                      "${MyServerConfig.server}/mypasar/images/products/${bookList[index].bookId}.png",
+                                    ),
+                                  ),
+                                ),
+                                Flexible(
+                                  flex: 4,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        truncateString(
+                                            bookList[index].bookTitle.toString()),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text("RM ${bookList[index].bookPrice}"),
+                                      Text(
+                                          "Available ${bookList[index].bookQty} unit"),
+                                    ],
+                                  ),
+                                )
                               ],
                             ),
-                          )
-                        ],
-                      ));
-                    }),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
-                )
-              ],
-            ),
+                  SizedBox(
+                    height: screenHeight * 0.05,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: numofpage,
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, index) {
+                        //build the list for textbutton with scroll
+                        if ((curpage - 1) == index) {
+                          //set current page number active
+                          color = Colors.red;
+                        } else {
+                          color = Colors.black;
+                        }
+                        return TextButton(
+                          onPressed: () {
+                            curpage = index + 1;
+                            loadBooks(title);
+                          },
+                          child: Text(
+                            (index + 1).toString(),
+                            style: TextStyle(color: color, fontSize: 18),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: newBook,
         child: const Icon(Icons.add),
@@ -142,37 +214,67 @@ class _MainPageState extends State<MainPage> {
   String truncateString(String str) {
     if (str.length > 20) {
       str = str.substring(0, 20);
-      return str + "...";
+      return "$str...";
     } else {
       return str;
     }
   }
 
-  void loadBooks() {
-  http.get(Uri.parse("${MyServerConfig.server}/mypasar/php/load_books.php"),
-      headers: {
-        // Add any headers if needed
-      }).then((response) {
-    // log(response.body);
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      if (data['status'] == "success") {
-        // Ensure that the response contains 'data' and 'books' keys
-        if (data['data'] != null && data['data']['books'] != null) {
+  void loadBooks(String title) {
+    http
+        .get(
+      Uri.parse(
+          "${MyServerConfig.server}/mypasar/php/load_books.php?title=$title&pageno=$curpage"),
+    )
+        .then((response) {
+      log(response.body);
+      if (response.statusCode == 200) {
+        log(response.body);
+        var data = jsonDecode(response.body);
+        if (data['status'] == "success") {
           bookList.clear();
-          // 'books' key should be an array containing book information
           data['data']['books'].forEach((v) {
             bookList.add(Book.fromJson(v));
           });
+          numofpage = int.parse(data['numofpage'].toString());
+          numofresult = int.parse(data['numberofresult'].toString());
         } else {
-          // Handle the case where 'data' or 'books' keys are missing
-          // You may need to define appropriate error handling here
+          //if no status failed
         }
-      } else {
-        // Handle the case where 'status' is not 'success'
       }
-    }
-    setState(() {});
-  });
-}
+      setState(() {});
+    });
+  }
+
+  void showSearchDialog() {
+    TextEditingController searchctlr = TextEditingController();
+    title = searchctlr.text;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return AlertDialog(
+            title: const Text(
+              "Search Title",
+              style: TextStyle(),
+            ),
+            content: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: searchctlr,
+                ),
+                MaterialButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    loadBooks(searchctlr.text);
+                  },
+                  child: const Text("Search"),
+                )
+              ],
+            ));
+      },
+    );
+  }
 }
